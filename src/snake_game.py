@@ -5,14 +5,10 @@ import matplotlib.pyplot as plt
 
 
 class Direction:
-    def left():
-        return 0
-    def up():
-        return 1
-    def right():
-        return 2
-    def down():
-        return 3
+    left = 0
+    up = 1
+    right = 2
+    down = 3
 
 class SnakeGame:
     
@@ -26,7 +22,6 @@ class SnakeGame:
         self.snake_directrion = Direction.up
         self.tail_flag = False #Hold tail for one step
         self.score = 0
-        self.fruit = (-1,-1)
         self.game_over = False;
         
     def set(self, position, value): #Change value at position, position is tuple (x, y)
@@ -80,7 +75,7 @@ class SnakeGame:
         while(pos in self.snake):
             pos = (random.randint(0, self.width-1), random.randint(0, self.height-1))
         self.fruit = pos
-        self.matrix[pos[0]][pos[1]] = 2
+        self.set(pos, 2)
         return
 
     def press(self, event):
@@ -89,4 +84,5 @@ class SnakeGame:
 
 game = SnakeGame(15,15,0)
 game.init_snake()
+game.add_fruit()
 game.display()
