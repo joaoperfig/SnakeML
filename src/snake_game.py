@@ -39,7 +39,7 @@ class SnakeGame:
         position = (math.floor(self.width/2), math.floor(self.height/2))
         self.snake = [position]
         self.set(position, 1)
-    
+
     def display(self):
         plt.matshow(self.matrix)
         plt.tick_params(axis='both', which='both', bottom=False, top=False, labelbottom=False, right=False, left=False, labelleft=False, labeltop=False)
@@ -51,22 +51,25 @@ class SnakeGame:
     
     def run(self, steptime): #call step ever x seconds
         while not self.game_over:
+            game.display()
             self.step()
             if (self.score%1000 == 100): self.add_fruit();
-            game.display()
             time.sleep(steptime)
         return
         
     def step(self): #move snake forward, check tail flag, add tiny score
-        for i in range(len(self.snake)):
-            position = (self.snake[i][0] + self.snake_directrion[0], self.snake[i][1] + self.snake_directrion[1])
-            if (self.check_collision(position)):
-                self.game_over = True
-            else:
-                self.remove(self.snake[i])
+        head_position = (self.snake[0][0] + self.snake_directrion[0], self.snake[0][1] + self.snake_directrion[1])
+        if (self.check_collision(head_position)):
+            self.game_over = True
+        else:
+            self.set(head_position, 1)
+            self.remove(self.snake[len(self.snake) - 1])
+            for i in range(len(self.snake)-1,0,-1):
+                position = (self.snake[i-1][0], self.snake[i-1][1])
                 self.snake[i] = position
                 self.set(position, 1)
-        print(self.snake)
+            self.snake[0] = head_position
+        self.score += 1
         return
 
     def move_snake(self,  direction): #change snake direction (ask agent?)
