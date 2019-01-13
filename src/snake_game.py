@@ -27,6 +27,7 @@ class SnakeGame:
         self.tail_flag = False #Hold tail for one step
         self.score = 0
         self.fruit = (-1,-1)
+        self.game_over = False;
         
     def set(self, position, value): #Change value at position, position is tuple (x, y)
         self.matrix[position[1]][position[0]] = value
@@ -49,16 +50,22 @@ class SnakeGame:
         return
     
     def run(self, steptime): #call step ever x seconds
+        while(not self.game_over):
+            self.step()
+            if (self.score%1000 == 0): self.add_fruit();
         return
         
     def step(self): #move snake forward, check tail flag, add tiny score
-        return
+        if(self.check_collision()):
+            self.game_over = True;
+        else:
+            return
     
     def move_snake(self,  direction): #change snake direction (ask agent?)
         return
     
     def check_collision(self): #out of bounds or ran over itself (repeated position in snake positions)
-        return
+        return False;
     
     def check_ate_fruit(self): #check head on fruit, use tail_flag, add score
         if(self.fruit in self.snake):
@@ -75,9 +82,11 @@ class SnakeGame:
         self.fruit = pos
         self.matrix[pos[0]][pos[1]] = 2
         return
-        
-        
+
+    def press(self, event):
+        print('pres',event.key)
+
+
 game = SnakeGame(15,15,0)
 game.init_snake()
-game.add_fruit()
 game.display()
