@@ -1,5 +1,8 @@
 import random
 import math
+import numpy as np
+import matplotlib.pyplot as plt
+
 
 class Direction:
     def left():
@@ -23,6 +26,7 @@ class SnakeGame:
         self.snake_directrion = Direction.up
         self.tail_flag = False #Hold tail for one step
         self.score = 0
+        self.fruit = (-1,-1)
         
     def set(self, position, value): #Change value at position, position is tuple (x, y)
         self.matrix[position[1]][position[0]] = value
@@ -36,6 +40,12 @@ class SnakeGame:
         self.set(position, 1)
     
     def display(self):
+        plt.matshow(self.matrix)
+        plt.tick_params(axis='both', which='both', bottom=False, top=False, labelbottom=False, right=False, left=False, labelleft=False, labeltop=False)
+        plt.summer()
+        plt.title('SnakeGame')
+        plt.text(-1,-1,'Score = ' + str(self.score))
+        plt.show()     
         return
     
     def run(self, steptime): #call step ever x seconds
@@ -51,8 +61,23 @@ class SnakeGame:
         return
     
     def check_ate_fruit(self): #check head on fruit, use tail_flag, add score
+        if(self.fruit in self.snake):
+            tail_flag = True
+            self.score += 100
+        else:
+            tail_flag = False
         return
     
     def add_fruit(self): #set something to 2 (do not put over snake)
+        pos = self.snake[0]
+        while(pos in self.snake):
+            pos = (random.randint(0, self.width-1), random.randint(0, self.height-1))
+        self.fruit = pos
+        self.matrix[pos[0]][pos[1]] = 2
         return
         
+        
+game = SnakeGame(15,15,0)
+game.init_snake()
+game.add_fruit()
+game.display()
