@@ -1,14 +1,16 @@
 import random
 import math
+import time
+
 import numpy as np
 import matplotlib.pyplot as plt
 
 
 class Direction:
-    left = 0
-    up = 1
-    right = 2
-    down = 3
+    left = (-1, 0)
+    up = (0, -1)
+    right = (1, 0)
+    down = (0, 1)
 
 class SnakeGame:
     
@@ -19,13 +21,16 @@ class SnakeGame:
         for i in range(height):
             self.matrix += [[0]*width] # 0=empty 1=snake 2=fruit
         self.snake = []
-        self.snake_directrion = Direction.up
+        self.snake_directrion = Direction.left
         self.tail_flag = False #Hold tail for one step
         self.score = 0
         self.game_over = False;
         
     def set(self, position, value): #Change value at position, position is tuple (x, y)
         self.matrix[position[1]][position[0]] = value
+
+    def remove(self, position):
+        self.matrix[position[1]][position[0]] = 0
         
     def get(self, position): #See value on position, position is tuple (x, y)
         return self.matrix[position[1]][position[0]]
@@ -41,26 +46,37 @@ class SnakeGame:
         plt.summer()
         plt.title('SnakeGame')
         plt.text(-1,-1,'Score = ' + str(self.score))
-        plt.show()     
+        plt.show()
         return
     
     def run(self, steptime): #call step ever x seconds
-        while(not self.game_over):
+        while not self.game_over:
             self.step()
-            if (self.score%1000 == 0): self.add_fruit();
+            if (self.score%1000 == 100): self.add_fruit();
+            game.display()
+            time.sleep(steptime)
         return
         
     def step(self): #move snake forward, check tail flag, add tiny score
-        if(self.check_collision()):
-            self.game_over = True;
-        else:
-            return
-    
+        for i in range(len(self.snake)):
+            position = (self.snake[i][0] + self.snake_directrion[0], self.snake[i][1] + self.snake_directrion[1])
+            if (self.check_collision(position)):
+                self.game_over = True
+            else:
+                self.remove(self.snake[i])
+                self.snake[i] = position
+                self.set(position, 1)
+        print(self.snake)
+        return
+
     def move_snake(self,  direction): #change snake direction (ask agent?)
         return
     
-    def check_collision(self): #out of bounds or ran over itself (repeated position in snake positions)
-        return False;
+    def check_collision(self, position): #out of bounds or ran over itself (repeated position in snake positions)
+        if self.get(position) == 1:
+            return True
+        else:
+            return False
     
     def check_ate_fruit(self): #check head on fruit, use tail_flag, add score
         if(self.fruit in self.snake):
@@ -84,5 +100,4 @@ class SnakeGame:
 
 game = SnakeGame(15,15,0)
 game.init_snake()
-game.add_fruit()
-game.display()
+game.run(1)
