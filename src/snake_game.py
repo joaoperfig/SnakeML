@@ -40,6 +40,7 @@ class SnakeGame:
         position = (math.floor(self.width/2), math.floor(self.height/2))
         self.snake = [position]
         self.set(position, 1)
+        self.add_fruit()
 
     def display(self):
         if not self.shown:
@@ -51,14 +52,15 @@ class SnakeGame:
             plt.text(-1,-1,'Score = ' + str(self.score))
             return
         else:
+            plt.text(-1,-1,'Score = ' + str(self.score)) #FIX            
             plt.matshow(self.matrix, 0)
             return
     
     def run(self, steptime): #call step ever x seconds
         while not self.game_over:
             game.display()
+            game.simpl_display()
             self.step()
-            if (self.score%1000 == 100): self.add_fruit();
             time.sleep(steptime)
             plt.pause(0.0001)
         return
@@ -71,6 +73,7 @@ class SnakeGame:
             print(self.snake)
             self.set(head_position, 1)
             self.snake = [head_position] + self.snake
+            self.check_ate_fruit()
             if self.tail_flag:
                 self.tail_flag = False
             else:
@@ -99,6 +102,7 @@ class SnakeGame:
         if(self.fruit in self.snake):
             tail_flag = True
             self.score += 100
+            self.add_fruit()
     
     def add_fruit(self): #set something to 2 (do not put over snake)
         pos = self.snake[0]
@@ -110,6 +114,13 @@ class SnakeGame:
 
     def press(self, event):
         print('pres',event.key)
+
+    def simpl_display(self):
+        for i in range(self.width):
+            stra = ""
+            for j in range(self.height):
+                stra += str(self.matrix[i][j]) + " "
+            print(stra)
 
 
 game = SnakeGame(15,15,0)
