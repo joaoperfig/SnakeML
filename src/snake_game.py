@@ -178,6 +178,14 @@ class SnakeGame:
         
     # [left, front, right, angle to apple]
     def get_observations(self): 
+        directions = [Direction.left, Direction.up, Direction.right, Direction.down]
+        for i in range(len(directions)):
+            if directions[i] == self.snake_direction:
+                front = directions[i]
+                right = directions[(i+1)%3]
+                back = directions[(i+2)%3]
+                left = directions[(i+3)%3]
+                
         return None
     
     def model(self):
