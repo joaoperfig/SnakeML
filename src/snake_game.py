@@ -9,23 +9,30 @@ import matplotlib.pyplot as plt
 class KeyboardAgent:
     
     def __init__(self):
-        return
+        self.snakeGame = None #the game assigns itself here
+        self.lastDirection = False
     
     def getDirection(self):
         if not msvcrt.kbhit():
-            return False
+            direc = False
         else:
             char = msvcrt.getch()
             if char == b'a':
-                return Direction.left
+                direc = Direction.left
             elif char == b'w':
-                return Direction.up
+                direc = Direction.up
             elif char == b'd':
-                return Direction.right    
+                direc = Direction.right
             elif char == b's':
-                return Direction.down   
+                direc = Direction.down
             else:
-                return False
+                direc = False
+        self.lastDirection = direc
+        return direc
+
+    def getLastDirection(self):
+        return this.lastDirection
+
 
 
 class TrainingAgent:
@@ -54,7 +61,8 @@ class Direction:
 
 class SnakeGame:
     
-    def __init__(self, width, height, agent, render=False, simpleRender=False):
+    def __init__(self, width, height, agent, render=False, simpleRender=False, record=False):
+        agent.snakeGame = self
         self.matrix = []
         self.width = width
         self.height = height
@@ -129,6 +137,7 @@ class SnakeGame:
         head_position = (self.snake[0][0] + self.snake_direction[0], self.snake[0][1] + self.snake_direction[1])
         self.snake = [head_position] + self.snake
         self.check_ate_fruit()
+        print(self.get_observations())
         if self.tail_flag:
             self.tail_flag = False
         else:
@@ -148,14 +157,18 @@ class SnakeGame:
     def check_collision(self): #out of bounds or ran over itself (repeated position in snake positions)
         if self.snake[0] in self.snake[1:]: #Head hits body
             return True
-        if self.snake[0][0] < 0:
+        return self.out_of_bounds(self.snake[0])
+
+    def out_of_bounds(self, position): #is position out of board bounds
+        if position[0] < 0:
             return True
-        if self.snake[0][1] < 0:
+        if position[1] < 0:
             return True        
-        if self.snake[0][0] >= self.width:
+        if position[0] >= self.width:
             return True
-        if self.snake[0][0] >= self.height:
-            return True          
+        if position[1] >= self.height:
+            return True
+        return False
         
     
     def check_ate_fruit(self): #check head on fruit, use tail_flag, add score
@@ -182,6 +195,40 @@ class SnakeGame:
                 stra += ":#O"[self.matrix[i][j]] + " "
             print(stra)
         print("")
+
+    def distance_fruit(self):
+        return
+
+    # [left, front, right, angle to apple]
+    def get_observations(self):
+        directions = [Direction.left, Direction.up, Direction.right, Direction.down]
+        for i in range(len(directions)):
+            if directions[i] == self.snake_direction:
+                front = directions[i]
+                right = directions[(i+1)%4]
+                back = directions[(i+2)%4]
+                left = directions[(i+3)%4]
+        nextpos = [(self.snake[0][0]+left[0], self.snake[0][1]+left[1]),
+                   (self.snake[0][0]+front[0],self.snake[0][1]+front[1]),
+                   (self.snake[0][0]+right[0],self.snake[0][1]+right[1]),
+                   (self.snake[0][0]+back[0],self.snake[0][1]+back[1])]
+        obs = []
+        for el in nextpos:
+            if self.out_of_bounds(el) or (el in self.snake):
+                obs += [1,]
+            else:
+                obs += [0,]
+        return obs
+
+    def model(self):
+        return
+
+    def train_model(self):
+        return
+
+    def train(self):
+        return
+
 
 
 class TrainSnake():
