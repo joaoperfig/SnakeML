@@ -27,7 +27,7 @@ class KeyboardAgent:
                 direc = Direction.down   
             else:
                 direc = False
-        this.lastDirection = direc
+        self.lastDirection = direc
         return direc
     
     def getLastDirection(self):
@@ -191,7 +191,7 @@ class SnakeGame:
     
 
 
-#game = SnakeGame(15,15,KeyboardAgent(), simpleRender=True)
-game = SnakeGame(15,15,KeyboardAgent(), render=True)
+game = SnakeGame(15,15,KeyboardAgent(), simpleRender=True)
+#game = SnakeGame(15,15,KeyboardAgent(), render=True)
 game.init_snake()
 game.run(0.2)
