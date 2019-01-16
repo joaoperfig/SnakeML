@@ -235,29 +235,6 @@ class SnakeGame:
         for i in range(len(directions)):
             if directions[i] == self.snake_direction:
                 front = directions[i]
-<<<<<<< HEAD
-                right = directions[(i+1)%3]
-                back = directions[(i+2)%3]
-                left = directions[(i+3)%3]
-        return None
-
-def get_all_data():
-    files = glob.glob("../resources/*.txt")
-    data = []
-    for filename in files:
-        f = open(filename,"r")
-        for line in f.readlines():
-            parts = line.split("->")
-            observ = eval(parts[0])
-            move = eval(parts[1])
-            data += [[observ, move]]
-    print(data)
-        
-
-
-#game = SnakeGame(15,15,KeyboardAgent(), simpleRender=True, record=True)
-game = SnakeGame(15,15,KeyboardAgent(), render=True, record = True)
-=======
                 right = directions[(i+1)%4]
                 back = directions[(i+2)%4]
                 left = directions[(i+3)%4]
@@ -293,9 +270,20 @@ class TrainSnake():
         game.init_snake()
         game.run(0.1)
 
+def get_all_data():
+    files = glob.glob("../resources/*.txt")
+    data = []
+    for filename in files:
+        f = open(filename,"r")
+        for line in f.readlines():
+            parts = line.split("->")
+            observ = eval(parts[0])
+            move = eval(parts[1])
+            data += [[observ, move]]
+    print(data)
+
 
 #game = SnakeGame(15,15,KeyboardAgent(), simpleRender=True)
-game = SnakeGame(15,15,KeyboardAgent(), render=True)
->>>>>>> 8f04bca07a228c56d1c00b4b2ddca257efcbe332
+game = SnakeGame(15,15,KeyboardAgent(), render=True, record=True)
 game.init_snake()
 game.run(0.2)
