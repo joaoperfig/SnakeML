@@ -136,15 +136,19 @@ class SnakeGame:
     
     def check_collision(self): #out of bounds or ran over itself (repeated position in snake positions)
         if self.snake[0] in self.snake[1:]: #Head hits body
+            return True     
+        return self.out_of_bounds(self.snake[0])
+        
+    def out_of_bounds(self, position): #is position out of board bounds
+        if position[0] < 0:
             return True
-        if self.snake[0][0] < 0:
-            return True
-        if self.snake[0][1] < 0:
+        if position[1] < 0:
             return True        
-        if self.snake[0][0] >= self.width:
+        if position[0] >= self.width:
             return True
-        if self.snake[0][0] >= self.height:
-            return True          
+        if position[1] >= self.height:
+            return True                  
+        return False
         
     
     def check_ate_fruit(self): #check head on fruit, use tail_flag, add score
@@ -173,7 +177,7 @@ class SnakeGame:
         print("")
         
     def get_observations(self): 
-        return None
+        return 
 
 
 #game = SnakeGame(15,15,KeyboardAgent(), simpleRender=True)
