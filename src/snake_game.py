@@ -2,6 +2,8 @@ import random
 import math
 import time
 import msvcrt
+import datetime
+import glob
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -31,7 +33,7 @@ class KeyboardAgent:
         return direc
     
     def getLastDirection(self):
-        return this.lastDirection
+        return self.lastDirection
         
 
 class Direction:
@@ -59,14 +61,27 @@ class SnakeGame:
         self.simpleRender = simpleRender
         self.agent=agent
         
+        self.record = record
+        if record:
+            self.filename = "data_" + datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") +".txt"
+            print("Will save data to resources/"+self.filename)
+            self.data = []
+        
     def set(self, position, value): #Change value at position, position is tuple (x, y)
-        self.matrix[position[1]][position[0]] = value
+        try:
+            self.matrix[position[1]][position[0]] = value
+        except:
+            print("Warning: trying to write out of bounds")
 
     def remove(self, position):
-        self.matrix[position[1]][position[0]] = 0
+        self.set(position, 0)
         
     def get(self, position): #See value on position, position is tuple (x, y)
-        return self.matrix[position[1]][position[0]]
+        try:
+            return self.matrix[position[1]][position[0]]
+        except:
+            print("Warning: trying to read out of bounds")        
+            return 4
         
     def init_snake(self):  #start self.snake (list of positions) add 1s to matrix
         position = (math.floor(self.width/2), math.floor(self.height/2))
@@ -112,6 +127,13 @@ class SnakeGame:
                     plt.pause(0.0001)
                 if(self.simpleRender):
                     game.simpl_display()
+        if (self.record):
+            file = open("../resources/"+self.filename, "w")
+            stri = ""
+            for dataline in self.data:
+                stri += dataline + "\n"
+            file.write(stri)
+            file.close()
         return
         
     def step(self): #move snake forward, check tail flag, add tiny score
@@ -126,8 +148,17 @@ class SnakeGame:
         self.set(head_position, 1)
         if (self.check_collision()):
             self.game_over = True
+        else:
+            if self.record:
+                self.add_data()
         self.score += 1
         return
+    
+    def add_data(self):
+        if (self.agent.getLastDirection()) == False:
+            self.data += [str(self.get_observations()) + str(" -> ") + str((0, 0))]
+        else:
+            self.data += [str(self.get_observations()) + str(" -> ") + str(self.agent.getLastDirection())]
 
     def move_snake(self): #change snake direction (ask agent?)
         direc = self.agent.getDirection()
@@ -185,21 +216,23 @@ class SnakeGame:
                 right = directions[(i+1)%3]
                 back = directions[(i+2)%3]
                 left = directions[(i+3)%3]
-                
         return None
-    
-    def model(self):
-        return
-    
-    def train_model(self):
-        return
-    
-    def train(self):
-        return
-    
+
+def get_all_data():
+    files = glob.glob("../resources/*.txt")
+    data = []
+    for filename in files:
+        f = open(filename,"r")
+        for line in f.readlines():
+            parts = line.split("->")
+            observ = eval(parts[0])
+            move = eval(parts[1])
+            data += [[observ, move]]
+    print(data)
+        
 
 
-game = SnakeGame(15,15,KeyboardAgent(), simpleRender=True)
-#game = SnakeGame(15,15,KeyboardAgent(), render=True)
+#game = SnakeGame(15,15,KeyboardAgent(), simpleRender=True, record=True)
+game = SnakeGame(15,15,KeyboardAgent(), render=True, record = True)
 game.init_snake()
 game.run(0.2)
