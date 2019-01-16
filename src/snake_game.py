@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 class KeyboardAgent:
     
     def __init__(self):
-        this.snakeGame = None #the game assigns itself here
-        this.lastDirection = False
+        self.snakeGame = None #the game assigns itself here
+        self.lastDirection = False
     
     def getDirection(self):
         if not msvcrt.kbhit():
@@ -42,7 +42,7 @@ class Direction:
 
 class SnakeGame:
     
-    def __init__(self, width, height, agent, render=False, simpleRender=False):
+    def __init__(self, width, height, agent, render=False, simpleRender=False, record=False):
         agent.snakeGame = self
         self.matrix = []
         self.width = width
