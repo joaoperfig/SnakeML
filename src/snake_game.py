@@ -24,17 +24,35 @@ class KeyboardAgent:
             elif char == b'w':
                 direc = Direction.up
             elif char == b'd':
-                direc = Direction.right    
+                direc = Direction.right
             elif char == b's':
-                direc = Direction.down   
+                direc = Direction.down
             else:
                 direc = False
         self.lastDirection = direc
         return direc
-    
+
     def getLastDirection(self):
         return self.lastDirection
-        
+
+class TrainingAgent:
+
+    def __init__(self):
+        return
+
+    def getDirection(self):
+        dir_number = random.randint(0, 4)
+        if dir_number == 1:
+            return Direction.left
+        elif dir_number == 2:
+            return Direction.up
+        elif dir_number == 3:
+            return Direction.right
+        elif dir_number == 4:
+            return Direction.down
+        else:
+            return False
+
 
 class Direction:
     left = (-1, 0)
@@ -140,6 +158,7 @@ class SnakeGame:
         head_position = (self.snake[0][0] + self.snake_direction[0], self.snake[0][1] + self.snake_direction[1])
         self.snake = [head_position] + self.snake
         self.check_ate_fruit()
+        print(self.get_observations())
         if self.tail_flag:
             self.tail_flag = False
         else:
@@ -167,9 +186,9 @@ class SnakeGame:
     
     def check_collision(self): #out of bounds or ran over itself (repeated position in snake positions)
         if self.snake[0] in self.snake[1:]: #Head hits body
-            return True     
+            return True
         return self.out_of_bounds(self.snake[0])
-        
+
     def out_of_bounds(self, position): #is position out of board bounds
         if position[0] < 0:
             return True
@@ -178,7 +197,7 @@ class SnakeGame:
         if position[0] >= self.width:
             return True
         if position[1] >= self.height:
-            return True                  
+            return True
         return False
         
     
@@ -206,13 +225,17 @@ class SnakeGame:
                 stra += ":#O"[self.matrix[i][j]] + " "
             print(stra)
         print("")
-        
+
+    def distance_fruit(self):
+        return
+
     # [left, front, right, angle to apple]
-    def get_observations(self): 
+    def get_observations(self):
         directions = [Direction.left, Direction.up, Direction.right, Direction.down]
         for i in range(len(directions)):
             if directions[i] == self.snake_direction:
                 front = directions[i]
+<<<<<<< HEAD
                 right = directions[(i+1)%3]
                 back = directions[(i+2)%3]
                 left = directions[(i+3)%3]
@@ -234,5 +257,45 @@ def get_all_data():
 
 #game = SnakeGame(15,15,KeyboardAgent(), simpleRender=True, record=True)
 game = SnakeGame(15,15,KeyboardAgent(), render=True, record = True)
+=======
+                right = directions[(i+1)%4]
+                back = directions[(i+2)%4]
+                left = directions[(i+3)%4]
+        nextpos = [(self.snake[0][0]+left[0], self.snake[0][1]+left[1]),
+                   (self.snake[0][0]+front[0],self.snake[0][1]+front[1]),
+                   (self.snake[0][0]+right[0],self.snake[0][1]+right[1]),
+                   (self.snake[0][0]+back[0],self.snake[0][1]+back[1])]
+        obs = []
+        for el in nextpos:
+            if self.out_of_bounds(el) or (el in self.snake):
+                obs += [1,]
+            else:
+                obs += [0,]
+        return obs
+
+    def model(self):
+        return
+
+    def train_model(self):
+        return
+
+    def train(self):
+        return
+
+
+
+class TrainSnake():
+    def __init__(self):
+        return
+
+    def play_game(self):
+        game = SnakeGame(20,20,KeyboardAgent())
+        game.init_snake()
+        game.run(0.1)
+
+
+#game = SnakeGame(15,15,KeyboardAgent(), simpleRender=True)
+game = SnakeGame(15,15,KeyboardAgent(), render=True)
+>>>>>>> 8f04bca07a228c56d1c00b4b2ddca257efcbe332
 game.init_snake()
 game.run(0.2)
