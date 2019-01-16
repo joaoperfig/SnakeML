@@ -118,6 +118,7 @@ class SnakeGame:
         head_position = (self.snake[0][0] + self.snake_direction[0], self.snake[0][1] + self.snake_direction[1])
         self.snake = [head_position] + self.snake
         self.check_ate_fruit()
+        print(self.get_observations())        
         if self.tail_flag:
             self.tail_flag = False
         else:
@@ -175,6 +176,9 @@ class SnakeGame:
                 stra += ":#O"[self.matrix[i][j]] + " "
             print(stra)
         print("")
+     
+    def distance_fruit(self):
+        return
         
     # [left, front, right, angle to apple]
     def get_observations(self): 
@@ -182,11 +186,20 @@ class SnakeGame:
         for i in range(len(directions)):
             if directions[i] == self.snake_direction:
                 front = directions[i]
-                right = directions[(i+1)%3]
-                back = directions[(i+2)%3]
-                left = directions[(i+3)%3]
-                
-        return None
+                right = directions[(i+1)%4]
+                back = directions[(i+2)%4]
+                left = directions[(i+3)%4]
+        nextpos = [(self.snake[0][0]+left[0], self.snake[0][1]+left[1]),
+                   (self.snake[0][0]+front[0],self.snake[0][1]+front[1]), 
+                   (self.snake[0][0]+right[0],self.snake[0][1]+right[1]),
+                   (self.snake[0][0]+back[0],self.snake[0][1]+back[1])]
+        obs = []
+        for el in nextpos:
+            if self.out_of_bounds(el) or (el in self.snake):
+                obs += [1,]
+            else:
+                obs += [0,]
+        return obs
     
     def model(self):
         return
