@@ -1,10 +1,31 @@
 import random
 import math
 import time
+import msvcrt
 
 import numpy as np
 import matplotlib.pyplot as plt
 
+class KeyboardAgent:
+    
+    def __init__(self):
+        return
+    
+    def getDirection(self):
+        if not msvcrt.kbhit():
+            return False
+        else:
+            char = msvcrt.getch()
+            if char == b'a':
+                return Direction.left
+            elif char == b'w':
+                return Direction.up
+            elif char == b'd':
+                return Direction.right    
+            elif char == b's':
+                return Direction.down   
+            else:
+                return False
 
 class Direction:
     left = (-1, 0)
@@ -14,7 +35,7 @@ class Direction:
 
 class SnakeGame:
     
-    def __init__(self, width, height, agent, render=False):
+    def __init__(self, width, height, agent, render=False, simpleRender=False):
         self.matrix = []
         self.width = width
         self.height = height
@@ -24,8 +45,11 @@ class SnakeGame:
         self.snake_direction = Direction.up
         self.tail_flag = True #Hold tail for one step
         self.score = 0
-        self.game_over = False;
+        self.game_over = False
         self.shown = False
+        self.render = render
+        self.simpleRender = simpleRender
+        self.agent=agent
         
     def set(self, position, value): #Change value at position, position is tuple (x, y)
         self.matrix[position[1]][position[0]] = value
@@ -45,45 +69,62 @@ class SnakeGame:
     def display(self):
         if not self.shown:
             self.shown = True
-            plt.matshow(self.matrix)
+            self.fig, self.ax = plt.subplots()
+            self.mat = self.ax.matshow(self.matrix)    
             plt.tick_params(axis='both', which='both', bottom=False, top=False, labelbottom=False, right=False, left=False, labelleft=False, labeltop=False)
-            plt.summer()
+            #plt.summer()
             plt.title('SnakeGame')
-            plt.text(-1,-1,'Score = ' + str(self.score))
+            self.t1 = self.ax.text(-1,-1,'Score = ' + str(self.score))
             return
         else:
-            plt.text(-1,-1,'Score = ' + str(self.score)) #FIX            
-            plt.matshow(self.matrix, 0)
+            self.t1.set_text('Score = ' + str(self.score))       
+            #plt.matshow(self.matrix, 0)
+            self.mat.set_data(self.matrix)
             return
     
     def run(self, steptime): #call step ever x seconds
-        while not self.game_over:
+        if(self.render):
             game.display()
-            game.simpl_display()
-            self.step()
-            time.sleep(steptime)
             plt.pause(0.0001)
+        if(self.simpleRender):
+            game.simpl_display()
+        time.sleep(1.5) #Get ready!
+        
+        fractionstep = steptime
+        last = time.process_time()
+        
+        while not self.game_over:
+            if ( time.process_time() >= last + fractionstep):
+                last = time.process_time()
+                #time.sleep(steptime)
+                self.move_snake()
+                self.step()
+                if(self.render):
+                    game.display()
+                    plt.pause(0.0001)
+                if(self.simpleRender):
+                    game.simpl_display()
         return
         
     def step(self): #move snake forward, check tail flag, add tiny score
         head_position = (self.snake[0][0] + self.snake_direction[0], self.snake[0][1] + self.snake_direction[1])
+        self.snake = [head_position] + self.snake
+        self.check_ate_fruit()
+        if self.tail_flag:
+            self.tail_flag = False
+        else:
+            self.remove(self.snake[len(self.snake) - 1])
+            self.snake = self.snake[:-1]
+        self.set(head_position, 1)
         if (self.check_collision()):
             self.game_over = True
-        else:
-            print(self.snake)
-            self.set(head_position, 1)
-            self.snake = [head_position] + self.snake
-            self.check_ate_fruit()
-            if self.tail_flag:
-                self.tail_flag = False
-            else:
-                self.remove(self.snake[len(self.snake) - 1])
-                self.snake = self.snake[:-1]
         self.score += 1
         return
 
-    def move_snake(self,  direction): #change snake direction (ask agent?)
-        return
+    def move_snake(self): #change snake direction (ask agent?)
+        direc = self.agent.getDirection()
+        if(direc):
+            self.snake_direction = direc
     
     def check_collision(self): #out of bounds or ran over itself (repeated position in snake positions)
         if self.snake[0] in self.snake[1:]: #Head hits body
@@ -100,7 +141,7 @@ class SnakeGame:
     
     def check_ate_fruit(self): #check head on fruit, use tail_flag, add score
         if(self.fruit in self.snake):
-            tail_flag = True
+            self.tail_flag = True
             self.score += 100
             self.add_fruit()
     
@@ -119,10 +160,12 @@ class SnakeGame:
         for i in range(self.width):
             stra = ""
             for j in range(self.height):
-                stra += str(self.matrix[i][j]) + " "
+                stra += ":#O"[self.matrix[i][j]] + " "
             print(stra)
+        print("")
 
 
-game = SnakeGame(15,15,0)
+#game = SnakeGame(15,15,KeyboardAgent(), simpleRender=True)
+game = SnakeGame(15,15,KeyboardAgent(), render=True)
 game.init_snake()
-game.run(1)
+game.run(0.2)
