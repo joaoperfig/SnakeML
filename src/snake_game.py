@@ -27,6 +27,25 @@ class KeyboardAgent:
             else:
                 return False
 
+
+class TrainingAgent:
+
+    def __init__(self):
+        return
+
+    def getDirection(self):
+        dir_number = random.randint(0, 4)
+        if dir_number == 1:
+            return Direction.left
+        elif dir_number == 2:
+            return Direction.up
+        elif dir_number == 3:
+            return Direction.right
+        elif dir_number == 4:
+            return Direction.down
+        else:
+            return False
+
 class Direction:
     left = (-1, 0)
     up = (0, -1)
@@ -163,6 +182,16 @@ class SnakeGame:
                 stra += ":#O"[self.matrix[i][j]] + " "
             print(stra)
         print("")
+
+
+class TrainSnake():
+    def __init__(self):
+        return
+
+    def play_game(self):
+        game = SnakeGame(20,20,KeyboardAgent())
+        game.init_snake()
+        game.run(0.1)
 
 
 #game = SnakeGame(15,15,KeyboardAgent(), simpleRender=True)
