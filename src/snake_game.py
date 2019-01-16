@@ -31,8 +31,7 @@ class KeyboardAgent:
         return direc
 
     def getLastDirection(self):
-        return this.lastDirection
-
+        return self.lastDirection
 
 
 class TrainingAgent:
