@@ -172,8 +172,20 @@ class SnakeGame:
             print(stra)
         print("")
         
+    # [left, front, right, angle to apple]
     def get_observations(self): 
+        
         return None
+    
+    def model(self):
+        return
+    
+    def train_model(self):
+        return
+    
+    def train(self):
+        return
+    
 
 
 #game = SnakeGame(15,15,KeyboardAgent(), simpleRender=True)
