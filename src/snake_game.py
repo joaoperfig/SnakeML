@@ -9,23 +9,30 @@ import matplotlib.pyplot as plt
 class KeyboardAgent:
     
     def __init__(self):
-        return
+        this.snakeGame = None #the game assigns itself here
+        this.lastDirection = False
     
     def getDirection(self):
         if not msvcrt.kbhit():
-            return False
+            direc = False
         else:
             char = msvcrt.getch()
             if char == b'a':
-                return Direction.left
+                direc = Direction.left
             elif char == b'w':
-                return Direction.up
+                direc = Direction.up
             elif char == b'd':
-                return Direction.right    
+                direc = Direction.right    
             elif char == b's':
-                return Direction.down   
+                direc = Direction.down   
             else:
-                return False
+                direc = False
+        this.lastDirection = direc
+        return direc
+    
+    def getLastDirection(self):
+        return this.lastDirection
+        
 
 class Direction:
     left = (-1, 0)
@@ -36,6 +43,7 @@ class Direction:
 class SnakeGame:
     
     def __init__(self, width, height, agent, render=False, simpleRender=False):
+        agent.snakeGame = self
         self.matrix = []
         self.width = width
         self.height = height
@@ -163,6 +171,9 @@ class SnakeGame:
                 stra += ":#O"[self.matrix[i][j]] + " "
             print(stra)
         print("")
+        
+    def get_observations(self): 
+        return None
 
 
 #game = SnakeGame(15,15,KeyboardAgent(), simpleRender=True)
