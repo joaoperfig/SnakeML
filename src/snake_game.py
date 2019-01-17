@@ -4,9 +4,43 @@ import time
 import msvcrt
 import datetime
 import glob
-
+import tflearn
 import numpy as np
 import matplotlib.pyplot as plt
+
+class TFAgent:
+    
+    def __init__(self, model, threshold=0.25):
+        self.snakeGame = None
+        self.model = model
+        self.lastDirection = False
+        self.move_threshold = threshold
+        
+    def getDirection(self):
+        observations = self.snakeGame.get_observations()
+        predict = self.model.predict((np.array(observations)).reshape(-1, 9, 1))
+        predict = predict[0]
+        if abs(predict[0]) < self.move_threshold and abs(predict[1]) < self.move_threshold:
+            direct = False
+        elif abs(predict[0]) > abs(predict[1]):
+            # predict[0] is furthest from 0, so predict[1] will be 0
+            if predict[0] > 0:
+                direct = (1, 0)
+            else:
+                direct = (-1, 0)
+        else:
+            # predict[1] is furthest from 0, so predict[0] will be 0
+            if predict[1] > 0:
+                direct = (0, 1)
+            else:
+                direct = (0, -1)
+        self.lastDirection = direct
+        #print("AI says: "+str(direct)+" (from "+str(predict)+")")
+        return direct
+    
+    def getLastDirection(self):
+        return self.lastDirection
+            
 
 class KeyboardAgent:
     
@@ -40,7 +74,6 @@ class TrainingAgent:
     def __init__(self):
         self.snakeGame = None
         self.lastDirection = False
-        return
 
     def getDirection(self):
         dir_number = random.randint(0, 4)
@@ -127,21 +160,30 @@ class SnakeGame:
             self.mat.set_data(self.matrix)
             return
     
-    def run(self, steptime): #call step ever x seconds
+    def run(self, steptime, wait_start=2, minpoints_at_steps=False): #call step ever x seconds
         if(self.render):
             self.display()
             plt.pause(0.0001)
         if(self.simpleRender):
             self.simpl_display()
-        time.sleep(1.5) #Get ready!
-        
+        time.sleep(wait_start) #Get ready!
+        steps = 0
         fractionstep = steptime
         last = time.process_time()
         
         while not self.game_over:
             if ( time.process_time() >= last + fractionstep):
+                steps += 1
+                if (minpoints_at_steps):
+                    minpoints = minpoints_at_steps[0]
+                    checksteps = minpoints_at_steps[0]
+                    if steps == checksteps:
+                        if self.score <= minpoints:
+                            self.game_over = True
+                            self.score = 0
                 last = time.process_time()
                 #time.sleep(steptime)
+                self.old_direction = self.snake_direction
                 self.move_snake()
                 self.step()
                 if(self.render):
@@ -149,9 +191,12 @@ class SnakeGame:
                     plt.pause(0.0001)
                 if(self.simpleRender):
                     self.simpl_display()
+        print("GAME OVER")
+        print("Final Score: "+str(self.score))
+        time.sleep(1)
         if (self.record):
             self.save_record()
-        return
+        return self.score
 
     def save_record(self):
         self.filename = "data_" + datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".txt"
@@ -232,27 +277,34 @@ class SnakeGame:
         print("")
 
     def distance_fruit(self):
-        return
+        return (self.snake[0][0] - self.fruit[0],self.snake[0][1] - self.fruit[1])
 
-    # [left, front, right, angle to apple]
     def get_observations(self):
-        directions = [Direction.left, Direction.up, Direction.right, Direction.down]
-        for i in range(len(directions)):
-            if directions[i] == self.snake_direction:
-                front = directions[i]
-                right = directions[(i+1)%4]
-                back = directions[(i+2)%4]
-                left = directions[(i+3)%4]
-        nextpos = [(self.snake[0][0]+left[0], self.snake[0][1]+left[1]),
-                   (self.snake[0][0]+front[0],self.snake[0][1]+front[1]),
-                   (self.snake[0][0]+right[0],self.snake[0][1]+right[1]),
-                   (self.snake[0][0]+back[0],self.snake[0][1]+back[1])]
+        nextpos = [(self.snake[0][0]+Direction.left[0], self.snake[0][1]+Direction.left[1]),
+                   (self.snake[0][0]+Direction.up[0],self.snake[0][1]+Direction.up[1]),
+                   (self.snake[0][0]+Direction.right[0],self.snake[0][1]+Direction.right[1]),
+                   (self.snake[0][0]+Direction.down[0],self.snake[0][1]+Direction.down[1])]
         obs = []
         for el in nextpos:
             if self.out_of_bounds(el) or (el in self.snake):
                 obs += [1,]
             else:
                 obs += [0,]
+        
+        if self.distance_fruit()[0] > 0: 
+            obs += [1,]
+        elif self.distance_fruit()[0] == 0:
+            obs += [0,]
+        else:
+            obs += [-1,]        
+    
+        if self.distance_fruit()[1] > 0: 
+            obs += [1,]
+        elif self.distance_fruit()[1] == 0:
+            obs += [0,]
+        else:
+            obs += [-1,]
+        obs += [(abs(self.distance_fruit()[0]) + abs(self.distance_fruit()[1]))/max(self.width, self.height), self.old_direction[0], self.old_direction[1],]
         return obs
 
     def model(self):
@@ -293,14 +345,35 @@ def get_all_data():
             observ = eval(parts[0])
             move = eval(parts[1])
             data += [[observ, move]]
-    print(data)
+    return data
+    
+def make_network_and_train(train_data, save_filename=False, rate =0.03):
+    network = tflearn.layers.core.input_data(shape=[None, 9, 1], name='input')
+    network = tflearn.layers.core.fully_connected(network, 30, activation='relu')
+    network = tflearn.layers.core.fully_connected(network, 2, activation='linear')
+    network = tflearn.layers.estimator.regression(network, optimizer='adam', learning_rate=rate, loss='mean_square', name='target')
+    model = tflearn.DNN(network)    
+    X = np.array([i[0] for i in train_data]).reshape(-1, 9, 1)
+    y = np.array([i[1] for i in train_data]).reshape(-1, 2)
+    if (save_filename):
+        model.fit(X,y, n_epoch = 3, shuffle = True, run_id = save_filename)
+        model.save(save_filename)    
+    else:
+        model.fit(X,y, n_epoch = 3, shuffle = True)    
+    return model 
 
-
-#game = SnakeGame(15,15,KeyboardAgent(), simpleRender=True)
-# game = SnakeGame(15,15,KeyboardAgent(), render=True, record=True)
-# game.init_snake()
-# game.run(0.2)
-
-train = TrainSnake(15,15,render=False)
-train.play_game()
-
+def auto_game():
+    data = get_all_data()
+    model = make_network_and_train(data, rate=0.002)
+    agent = TFAgent(model, threshold=0.2)
+    game = SnakeGame(15,15,agent, render=True, record=False)
+    game.init_snake()
+    game.run(0.1,0)
+    
+def normal_game():
+    game = SnakeGame(15,15,KeyboardAgent(), render=True, record=True)
+    game.init_snake()
+    game.run(0.2)    
+    
+normal_game()
+#auto_game()
