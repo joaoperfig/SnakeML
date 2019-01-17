@@ -12,12 +12,35 @@ class TFAgent:
     
     def __init__(self, model):
         self.snakeGame = None
-        this.model = model
+        self.model = model
         self.lastDirection = False
+        self.move_threshold = 0.25
         
     def getDirection(self):
         observations = self.snakeGame.get_observations()
-        model.predict(self.add_action_to_observation(prev_observation, action).reshape(-1, 5, 1))
+        predict = model.predict((np.array(observations)).reshape(-1, 9, 1))
+        predict = predict[0]
+        if abs(predict[0]) < self.move_threshold and abs(predict[1]) < self.move_threshold:
+            direct = False
+        elif abs(predict[0]) > abs(predict[1]):
+            # predict[0] is furthest from 0, so predict[1] will be 0
+            if predict[0] > 0:
+                direct = (1, 0)
+            else:
+                direct = (-1, 0)
+        else:
+            # predict[1] is furthest from 0, so predict[0] will be 0
+            if predict[1] > 0:
+                direct = (0, 1)
+            else:
+                direct = (0, -1)
+        self.lastDirection = direct
+        print("AI says: "+str(direct)+" (from "+str(predict)+")")
+        return direct
+    
+    def getLastDirection(self):
+        return self.lastDirection
+            
 
 class KeyboardAgent:
     
@@ -245,42 +268,6 @@ class SnakeGame:
     def distance_fruit(self):
         return (self.snake[0][0] - self.fruit[0],self.snake[0][1] - self.fruit[1])
 
-    # [left, front, right, angle to apple]
-    def get_observations2(self):
-        directions = [Direction.left, Direction.up, Direction.right, Direction.down]
-        for i in range(len(directions)):
-            if directions[i] == self.snake_direction:
-                front = directions[i]
-                right = directions[(i+1)%4]
-                back = directions[(i+2)%4]
-                left = directions[(i+3)%4]
-        nextpos = [(self.snake[0][0]+left[0], self.snake[0][1]+left[1]),
-                   (self.snake[0][0]+front[0],self.snake[0][1]+front[1]),
-                   (self.snake[0][0]+right[0],self.snake[0][1]+right[1]),
-                   (self.snake[0][0]+back[0],self.snake[0][1]+back[1])]
-        obs = []
-        for el in nextpos:
-            if self.out_of_bounds(el) or (el in self.snake):
-                obs += [1,]
-            else:
-                obs += [0,]
-    
-        if self.distance_fruit()[0] > 0: 
-            obs += [1,]
-        elif self.distance_fruit()[0] == 0:
-            obs += [0,]
-        else:
-            obs += [-1,]        
-        
-        if self.distance_fruit()[1] > 0: 
-            obs += [1,]
-        elif self.distance_fruit()[1] == 0:
-            obs += [0,]
-        else:
-            obs += [-1,]
-        return obs
-
-    #[left, top, right, bottom]
     def get_observations(self):
         nextpos = [(self.snake[0][0]+Direction.left[0], self.snake[0][1]+Direction.left[1]),
                    (self.snake[0][0]+Direction.up[0],self.snake[0][1]+Direction.up[1]),
@@ -307,7 +294,6 @@ class SnakeGame:
         else:
             obs += [-1,]
         obs += [(abs(self.distance_fruit()[0]) + abs(self.distance_fruit()[1]))/max(self.width, self.height), self.old_direction[0], self.old_direction[1],]
-        print(obs)  
         return obs
 
     def model(self):
@@ -348,7 +334,7 @@ def get_all_data():
             observ = eval(parts[0])
             move = eval(parts[1])
             data += [[observ, move]]
-    print(data)
+    return data
     
 def make_network_and_train(train_data, save_filename=False):
     network = tflearn.layers.core.input_data(shape=[None, 9, 1], name='input')
@@ -367,10 +353,24 @@ def make_network_and_train(train_data, save_filename=False):
 
 
 #game = SnakeGame(15,15,KeyboardAgent(), simpleRender=True)
-game = SnakeGame(15,15,KeyboardAgent(), render=True, record=True)
-game.init_snake()
+#game = SnakeGame(15,15,KeyboardAgent(), render=True, record=True)
+#game.init_snake()
 #game.run(0.2)
 
 #train = TrainSnake(15,15,render=False)
 #train.play_game()
 
+def auto_game():
+    data = get_all_data()
+    model = make_network_and_train(data)
+    agent = TFAgent(model)
+    game = SnakeGame(15,15,agent, render=True, record=False)
+    game.init_snake()
+    game.run(0.2)
+    
+def normal_game():
+    game = SnakeGame(15,15,KeyboardAgent(), render=True, record=True)
+    game.init_snake()
+    game.run(0.2)    
+    
+normal_game()
