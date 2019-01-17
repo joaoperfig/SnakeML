@@ -4,7 +4,7 @@ import time
 import msvcrt
 import datetime
 import glob
-#import tflearn
+import tflearn
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -296,7 +296,7 @@ class SnakeGame:
             obs += [0,]
         else:
             obs += [-1,]
-        obs += [abs(self.distance_fruit()[0]) + abs(self.distance_fruit()[1]), self.old_direction[0], self.old_direction[1],]
+        obs += [(abs(self.distance_fruit()[0]) + abs(self.distance_fruit()[1]))/max(self.width, self.height), self.old_direction[0], self.old_direction[1],]
         print(obs)  
         return obs
 
@@ -340,12 +340,20 @@ def get_all_data():
             data += [[observ, move]]
     print(data)
     
-def make_network():
-    network = tflearn.layers.core.input_data(shape=[None, 5, 1], name='input')
-    network = tflearn.layers.core.fully_connected(network, 25, activation='relu')
-    network = tflearn.layers.core.fully_connected(network, 1, activation='linear')
+def make_network_and_train(train_data, save_filename=False):
+    network = tflearn.layers.core.input_data(shape=[None, 9, 1], name='input')
+    network = tflearn.layers.core.fully_connected(network, 30, activation='relu')
+    network = tflearn.layers.core.fully_connected(network, 2, activation='linear')
     network = tflearn.layers.estimator.regression(network, optimizer='adam', learning_rate=0.01, loss='mean_square', name='target')
     model = tflearn.DNN(network)    
+    X = np.array([i[0] for i in train_data]).reshape(-1, 9, 1)
+    y = np.array([i[1] for i in train_data]).reshape(-1, 2)
+    if (save_filename):
+        model.fit(X,y, n_epoch = 3, shuffle = True, run_id = save_filename)
+    else:
+        model.fit(X,y, n_epoch = 3, shuffle = True)
+        model.save(save_filename)        
+    return model    
 
 
 #game = SnakeGame(15,15,KeyboardAgent(), simpleRender=True)
