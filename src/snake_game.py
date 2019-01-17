@@ -77,8 +77,34 @@ class TFAgent:
     def getLastDirection(self):
         return self.lastDirection
             
-
 class KeyboardAgent:
+    
+    def __init__(self):
+        self.snakeGame = None #the game assigns itself here
+        self.lastDirection = False
+    
+    def getDirection(self):
+        if not msvcrt.kbhit():
+            direc = False
+        else:
+            char = msvcrt.getch()
+            if char == b'a':
+                direc = Direction.left
+            elif char == b'w':
+                direc = Direction.up
+            elif char == b'd':
+                direc = Direction.right
+            elif char == b's':
+                direc = Direction.down
+            else:
+                direc = False
+        self.lastDirection = direc
+        return direc
+
+    def getLastDirection(self):
+        return self.lastDirection
+
+class KeyboardAgent2:
     
     def __init__(self):
         self.snakeGame = None #the game assigns itself here
@@ -293,7 +319,7 @@ class SnakeGame:
 
         file = open("../resources/" + self.filename, "w")
         stri = ""
-        for dataline in self.data:
+        for dataline in self.data[:-1]: #Remove last value that causes snake to die
             stri += dataline + "\n"
         file.write(stri)
         file.close()
@@ -522,8 +548,8 @@ def make_data():
         print("Score: "+str(score))
 
 
-normal_game()
-#auto_game()
+#normal_game()
+auto_game()
 #programmed_game()
 #make_data()
 #fast_auto_game(0.005,0.6)
