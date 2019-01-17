@@ -389,13 +389,27 @@ class SnakeGame:
         obs += [(abs(self.distance_fruit()[0]) + abs(self.distance_fruit()[1]))/max(self.width, self.height), self.old_direction[0], self.old_direction[1],]
         return obs
 
-    def model(self):
-        return
+    def get_rel_observations(self): 
+        directions = [Direction.left, Direction.up, Direction.right, Direction.down]
+        for i in range(len(directions)):
+            if directions[i] == self.snake_direction:
+                front = directions[i]
+                right = directions[(i+1)%4]
+                back = directions[(i+2)%4]
+                left = directions[(i+3)%4]
+        nextpos = [(self.snake[0][0]+left[0], self.snake[0][1]+left[1]),
+                   (self.snake[0][0]+front[0],self.snake[0][1]+front[1]), 
+                   (self.snake[0][0]+right[0],self.snake[0][1]+right[1]),
+                   (self.snake[0][0]+back[0],self.snake[0][1]+back[1])]
+        obs = []
+        for el in nextpos:
+            if self.out_of_bounds(el) or (el in self.snake):
+                obs += [1,]
+            else:
+                obs += [0,]
+        return obs
 
-    def train_model(self):
-        return
-
-    def train(self):
+    def get_last_rel_direction(self):
         return
 
 class TrainSnake():
