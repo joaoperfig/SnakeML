@@ -47,24 +47,27 @@ class KeyboardAgent:
     def __init__(self):
         self.snakeGame = None #the game assigns itself here
         self.lastDirection = False
+        self.direc = Direction.up
     
-    def getDirection(self):
-        if not msvcrt.kbhit():
+    def setDirection(self,event=None):
+        if not event:
             direc = False
         else:
-            char = msvcrt.getch()
-            if char == b'a':
-                direc = Direction.left
-            elif char == b'w':
-                direc = Direction.up
-            elif char == b'd':
-                direc = Direction.right
-            elif char == b's':
-                direc = Direction.down
+            char = event.key
+            if char == 'a':
+                self.direc = Direction.left
+            elif char == 'w':
+                self.direc = Direction.up
+            elif char == 'd':
+                self.direc = Direction.right
+            elif char == 's':
+                self.direc = Direction.down
             else:
-                direc = False
-        self.lastDirection = direc
-        return direc
+                self.direc = False
+        self.lastDirection = self.direc
+
+    def getDirection(self):
+        return self.direc
 
     def getLastDirection(self):
         return self.lastDirection
@@ -76,7 +79,7 @@ class TrainingAgent:
         self.lastDirection = False
 
     def getDirection(self):
-        dir_number = random.randint(0, 4)
+        dir_number = random.randint(1, 4)
         if dir_number == 1 and self.lastDirection != Direction.right:
             direc = Direction.left
         elif dir_number == 2 and self.lastDirection != Direction.down:
@@ -147,8 +150,11 @@ class SnakeGame:
     def display(self):
         if not self.shown:
             self.shown = True
+            plt.rcParams['keymap.save'] = ''
             self.fig, self.ax = plt.subplots()
-            self.mat = self.ax.matshow(self.matrix)    
+            if hasattr(self.agent, 'setDirection'):
+                self.fig.canvas.mpl_connect('key_press_event', self.agent.setDirection)
+            self.mat = self.ax.matshow(self.matrix)
             plt.tick_params(axis='both', which='both', bottom=False, top=False, labelbottom=False, right=False, left=False, labelleft=False, labeltop=False)
             #plt.summer()
             plt.title('SnakeGame')
@@ -224,7 +230,6 @@ class SnakeGame:
             self.game_over = True
         else:
             self.add_data()
-        self.score += 0.1
         return
     
     def add_data(self):
@@ -257,7 +262,7 @@ class SnakeGame:
     def check_ate_fruit(self): #check head on fruit, use tail_flag, add score
         if(self.fruit in self.snake):
             self.tail_flag = True
-            self.score += 1000
+            self.score += 100
             self.add_fruit()
     
     def add_fruit(self): #set something to 2 (do not put over snake)
@@ -317,19 +322,19 @@ class SnakeGame:
         return
 
 class TrainSnake():
-    def __init__(self, width, height, initial_games = 1000000, render=False):
+    def __init__(self, width, height, initial_games = 10, render=False):
         self.width = width
         self.height = height
         self.initial_games = initial_games
         self.render = render
-        self.max_score = 101 0
+        self.max_score = 10
         return
 
     def play_game(self):
         for _ in range(self.initial_games):
             game = SnakeGame(self.width, self.height, TrainingAgent(),render=self.render)
             game.init_snake()
-            game.run(0.000000001)
+            game.run(0.0000001)
             if(game.score>self.max_score):
                 game.save_record()
                 self.max_score = game.score
@@ -371,9 +376,10 @@ def auto_game():
     game.run(0.1,0)
     
 def normal_game():
-    game = SnakeGame(15,15,KeyboardAgent(), render=True, record=True)
+    game = SnakeGame(15,15,KeyboardAgent(), render=True, record=False)
     game.init_snake()
     game.run(0.2)    
     
 normal_game()
-#auto_game()
+# auto_game()
+
