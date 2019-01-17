@@ -265,7 +265,9 @@ class SnakeGame:
                 last = time.process_time()
                 #time.sleep(steptime)
                 self.old_direction = self.snake_direction
+                self.last_obs = self.get_observations()             
                 self.move_snake()
+                self.add_data()   
                 self.step()
                 if(self.render):
                     self.display()
@@ -303,16 +305,14 @@ class SnakeGame:
         self.set(head_position, 1)
         if (self.check_collision()):
             self.game_over = True
-        else:
-            self.add_data()
         self.score += 0#1
 
     
     def add_data(self):
         if (self.agent.getLastDirection()) == False:
-            self.data += [str(self.get_observations()) + str(" -> ") + str((0, 0))]
+            self.data += [str(self.last_obs) + str(" -> ") + str((0, 0))]
         else:
-            self.data += [str(self.get_observations()) + str(" -> ") + str(self.agent.getLastDirection())]
+            self.data += [str(self.last_obs) + str(" -> ") + str(self.agent.getLastDirection())]
 
     def move_snake(self): #change snake direction (ask agent?)
         direc = self.agent.getDirection()
@@ -399,15 +399,16 @@ class SnakeGame:
                 left = directions[(i+3)%4]
         nextpos = [(self.snake[0][0]+left[0], self.snake[0][1]+left[1]),
                    (self.snake[0][0]+front[0],self.snake[0][1]+front[1]), 
-                   (self.snake[0][0]+right[0],self.snake[0][1]+right[1]),
-                   (self.snake[0][0]+back[0],self.snake[0][1]+back[1])]
+                   (self.snake[0][0]+right[0],self.snake[0][1]+right[1])]
         obs = []
         for el in nextpos:
             if self.out_of_bounds(el) or (el in self.snake):
                 obs += [1,]
             else:
                 obs += [0,]
-        return obs
+        # obs = [left, front, right]
+        dist = self.distance_fruit
+        
 
     def get_last_rel_direction(self):
         return
@@ -446,8 +447,8 @@ def get_all_data():
     
 def make_network_and_train(train_data, save_filename=False, rate =0.01):
     network = tflearn.layers.core.input_data(shape=[None, 6, 1], name='input')#9, 1], name='input')
-    network = tflearn.layers.core.fully_connected(network, 25, activation='relu')
-    #network = tflearn.layers.core.fully_connected(network, 10, activation='relu')
+    network = tflearn.layers.core.fully_connected(network, 20, activation='relu')
+    network = tflearn.layers.core.fully_connected(network, 20, activation='relu')
     network = tflearn.layers.core.fully_connected(network, 2, activation='linear')
     network = tflearn.layers.estimator.regression(network, optimizer='adam', learning_rate=rate, loss='mean_square', name='target')
     model = tflearn.DNN(network)    
@@ -462,8 +463,8 @@ def make_network_and_train(train_data, save_filename=False, rate =0.01):
 
 def auto_game():
     data = get_all_data()
-    model = make_network_and_train(data, rate=0.001)
-    agent = TFRouletteAgent(model, maxrand=0.001, curve_random=0.6)
+    model = make_network_and_train(data, rate=0.01)
+    agent = TFRouletteAgent(model, maxrand=0.5, curve_random=0.6)
     game = SnakeGame(15,15,agent, render=True, record=False)
     game.init_snake()
     game.run(0.01,0)
@@ -514,8 +515,8 @@ def make_data():
         print("Score: "+str(score))
     
 
-#normal_game()
-auto_game()
+normal_game()
+#auto_game()
 #programmed_game()
 #make_data()
 #fast_auto_game(0.005,0.6)
