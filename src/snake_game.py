@@ -179,7 +179,7 @@ class SnakeGame:
             self.game_over = True
         else:
             self.add_data()
-        self.score += 1
+        self.score += 0.1
         return
     
     def add_data(self):
@@ -212,7 +212,7 @@ class SnakeGame:
     def check_ate_fruit(self): #check head on fruit, use tail_flag, add score
         if(self.fruit in self.snake):
             self.tail_flag = True
-            self.score += 100
+            self.score += 1000
             self.add_fruit()
     
     def add_fruit(self): #set something to 2 (do not put over snake)
@@ -265,12 +265,12 @@ class SnakeGame:
         return
 
 class TrainSnake():
-    def __init__(self, width, height, initial_games = 10, render=False):
+    def __init__(self, width, height, initial_games = 1000000, render=False):
         self.width = width
         self.height = height
         self.initial_games = initial_games
         self.render = render
-        self.max_score = 100
+        self.max_score = 101 0
         return
 
     def play_game(self):
