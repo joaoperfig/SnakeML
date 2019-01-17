@@ -183,6 +183,9 @@ class SnakeGame:
                     plt.pause(0.0001)
                 if(self.simpleRender):
                     self.simpl_display()
+        print("GAME OVER")
+        print("Final Score: "+str(self.score))
+        time.sleep(1)
         if (self.record):
             self.save_record()
         return
