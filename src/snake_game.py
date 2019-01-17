@@ -8,6 +8,17 @@ import tflearn
 import numpy as np
 import matplotlib.pyplot as plt
 
+class TFAgent:
+    
+    def __init__(self, model):
+        self.snakeGame = None
+        this.model = model
+        self.lastDirection = False
+        
+    def getDirection(self):
+        observations = self.snakeGame.get_observations()
+        model.predict(self.add_action_to_observation(prev_observation, action).reshape(-1, 5, 1))
+
 class KeyboardAgent:
     
     def __init__(self):
@@ -40,7 +51,6 @@ class TrainingAgent:
     def __init__(self):
         self.snakeGame = None
         self.lastDirection = False
-        return
 
     def getDirection(self):
         dir_number = random.randint(0, 4)
@@ -350,16 +360,16 @@ def make_network_and_train(train_data, save_filename=False):
     y = np.array([i[1] for i in train_data]).reshape(-1, 2)
     if (save_filename):
         model.fit(X,y, n_epoch = 3, shuffle = True, run_id = save_filename)
+        model.save(save_filename)    
     else:
-        model.fit(X,y, n_epoch = 3, shuffle = True)
-        model.save(save_filename)        
+        model.fit(X,y, n_epoch = 3, shuffle = True)    
     return model    
 
 
 #game = SnakeGame(15,15,KeyboardAgent(), simpleRender=True)
 game = SnakeGame(15,15,KeyboardAgent(), render=True, record=True)
 game.init_snake()
-game.run(0.2)
+#game.run(0.2)
 
 #train = TrainSnake(15,15,render=False)
 #train.play_game()
