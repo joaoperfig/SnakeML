@@ -10,11 +10,11 @@ import matplotlib.pyplot as plt
 
 class TFAgent:
     
-    def __init__(self, model):
+    def __init__(self, model, threshold=0.25):
         self.snakeGame = None
         self.model = model
         self.lastDirection = False
-        self.move_threshold = 0.25
+        self.move_threshold = threshold
         
     def getDirection(self):
         observations = self.snakeGame.get_observations()
@@ -35,7 +35,7 @@ class TFAgent:
             else:
                 direct = (0, -1)
         self.lastDirection = direct
-        print("AI says: "+str(direct)+" (from "+str(predict)+")")
+        #print("AI says: "+str(direct)+" (from "+str(predict)+")")
         return direct
     
     def getLastDirection(self):
@@ -160,19 +160,27 @@ class SnakeGame:
             self.mat.set_data(self.matrix)
             return
     
-    def run(self, steptime, wait_start=2): #call step ever x seconds
+    def run(self, steptime, wait_start=2, minpoints_at_steps=False): #call step ever x seconds
         if(self.render):
             self.display()
             plt.pause(0.0001)
         if(self.simpleRender):
             self.simpl_display()
         time.sleep(wait_start) #Get ready!
-        
+        steps = 0
         fractionstep = steptime
         last = time.process_time()
         
         while not self.game_over:
             if ( time.process_time() >= last + fractionstep):
+                steps += 1
+                if (minpoints_at_steps):
+                    minpoints = minpoints_at_steps[0]
+                    checksteps = minpoints_at_steps[0]
+                    if steps == checksteps:
+                        if self.score <= minpoints:
+                            self.game_over = True
+                            self.score = 0
                 last = time.process_time()
                 #time.sleep(steptime)
                 self.old_direction = self.snake_direction
@@ -188,7 +196,7 @@ class SnakeGame:
         time.sleep(1)
         if (self.record):
             self.save_record()
-        return
+        return self.score
 
     def save_record(self):
         self.filename = "data_" + datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".txt"
@@ -339,11 +347,11 @@ def get_all_data():
             data += [[observ, move]]
     return data
     
-def make_network_and_train(train_data, save_filename=False):
+def make_network_and_train(train_data, save_filename=False, rate =0.03):
     network = tflearn.layers.core.input_data(shape=[None, 9, 1], name='input')
     network = tflearn.layers.core.fully_connected(network, 30, activation='relu')
     network = tflearn.layers.core.fully_connected(network, 2, activation='linear')
-    network = tflearn.layers.estimator.regression(network, optimizer='adam', learning_rate=0.01, loss='mean_square', name='target')
+    network = tflearn.layers.estimator.regression(network, optimizer='adam', learning_rate=rate, loss='mean_square', name='target')
     model = tflearn.DNN(network)    
     X = np.array([i[0] for i in train_data]).reshape(-1, 9, 1)
     y = np.array([i[1] for i in train_data]).reshape(-1, 2)
@@ -352,15 +360,15 @@ def make_network_and_train(train_data, save_filename=False):
         model.save(save_filename)    
     else:
         model.fit(X,y, n_epoch = 3, shuffle = True)    
-    return model    
+    return model 
 
 def auto_game():
     data = get_all_data()
-    model = make_network_and_train(data)
-    agent = TFAgent(model)
+    model = make_network_and_train(data, rate=0.002)
+    agent = TFAgent(model, threshold=0.2)
     game = SnakeGame(15,15,agent, render=True, record=False)
     game.init_snake()
-    game.run(0.2,6)
+    game.run(0.1,0)
     
 def normal_game():
     game = SnakeGame(15,15,KeyboardAgent(), render=True, record=True)
