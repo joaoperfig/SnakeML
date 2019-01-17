@@ -160,13 +160,13 @@ class SnakeGame:
             self.mat.set_data(self.matrix)
             return
     
-    def run(self, steptime): #call step ever x seconds
+    def run(self, steptime, wait_start=2): #call step ever x seconds
         if(self.render):
             self.display()
             plt.pause(0.0001)
         if(self.simpleRender):
             self.simpl_display()
-        time.sleep(1.5) #Get ready!
+        time.sleep(wait_start) #Get ready!
         
         fractionstep = steptime
         last = time.process_time()
@@ -366,7 +366,7 @@ def auto_game():
     agent = TFAgent(model)
     game = SnakeGame(15,15,agent, render=True, record=False)
     game.init_snake()
-    game.run(0.2)
+    game.run(0.2,6)
     
 def normal_game():
     game = SnakeGame(15,15,KeyboardAgent(), render=True, record=True)
