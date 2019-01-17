@@ -18,7 +18,7 @@ class TFAgent:
         
     def getDirection(self):
         observations = self.snakeGame.get_observations()
-        predict = model.predict((np.array(observations)).reshape(-1, 9, 1))
+        predict = self.model.predict((np.array(observations)).reshape(-1, 9, 1))
         predict = predict[0]
         if abs(predict[0]) < self.move_threshold and abs(predict[1]) < self.move_threshold:
             direct = False
@@ -351,15 +351,6 @@ def make_network_and_train(train_data, save_filename=False):
         model.fit(X,y, n_epoch = 3, shuffle = True)    
     return model    
 
-
-#game = SnakeGame(15,15,KeyboardAgent(), simpleRender=True)
-#game = SnakeGame(15,15,KeyboardAgent(), render=True, record=True)
-#game.init_snake()
-#game.run(0.2)
-
-#train = TrainSnake(15,15,render=False)
-#train.play_game()
-
 def auto_game():
     data = get_all_data()
     model = make_network_and_train(data)
@@ -374,3 +365,4 @@ def normal_game():
     game.run(0.2)    
     
 normal_game()
+#auto_game()
