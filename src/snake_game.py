@@ -4,7 +4,7 @@ import time
 import msvcrt
 import datetime
 import glob
-import tflearn
+#import tflearn
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -282,7 +282,7 @@ class SnakeGame:
                 obs += [1,]
             else:
                 obs += [0,]
-    
+        
         if self.distance_fruit()[0] > 0: 
             obs += [1,]
         elif self.distance_fruit()[0] == 0:
@@ -296,6 +296,7 @@ class SnakeGame:
             obs += [0,]
         else:
             obs += [-1,]
+        obs += [abs(self.distance_fruit()[0]) + abs(self.distance_fruit()[1]), self.old_direction[0], self.old_direction[1],]
         print(obs)  
         return obs
 
