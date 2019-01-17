@@ -340,10 +340,10 @@ def get_all_data():
     print(data)
     
 def make_network():
-    network = input_data(shape=[None, 5, 1], name='input')
-    network = fully_connected(network, 25, activation='relu')
-    network = fully_connected(network, 1, activation='linear')
-    network = regression(network, optimizer='adam', learning_rate=1e-2, loss='mean_square', name='target')
+    network = tflearn.layers.core.input_data(shape=[None, 5, 1], name='input')
+    network = tflearn.layers.core.fully_connected(network, 25, activation='relu')
+    network = tflearn.layers.core.fully_connected(network, 1, activation='linear')
+    network = tflearn.layers.estimator.regression(network, optimizer='adam', learning_rate=0.01, loss='mean_square', name='target')
     model = tflearn.DNN(network)    
 
 
