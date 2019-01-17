@@ -38,20 +38,27 @@ class KeyboardAgent:
 class TrainingAgent:
 
     def __init__(self):
+        self.snakeGame = None
+        self.lastDirection = False
         return
 
     def getDirection(self):
         dir_number = random.randint(0, 4)
-        if dir_number == 1:
-            return Direction.left
-        elif dir_number == 2:
-            return Direction.up
-        elif dir_number == 3:
-            return Direction.right
-        elif dir_number == 4:
-            return Direction.down
+        if dir_number == 1 and self.lastDirection != Direction.right:
+            direc = Direction.left
+        elif dir_number == 2 and self.lastDirection != Direction.down:
+            direc = Direction.up
+        elif dir_number == 3 and self.lastDirection != Direction.left:
+            direc = Direction.right
+        elif dir_number == 4 and self.lastDirection != Direction.up:
+            direc = Direction.down
         else:
-            return False
+            direc = False
+        self.lastDirection = direc
+        return direc
+
+    def getLastDirection(self):
+        return self.lastDirection
 
 
 class Direction:
@@ -78,12 +85,9 @@ class SnakeGame:
         self.render = render
         self.simpleRender = simpleRender
         self.agent=agent
-        
         self.record = record
-        if record:
-            self.filename = "data_" + datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") +".txt"
-            print("Will save data to resources/"+self.filename)
-            self.data = []
+        self.data = []
+
         
     def set(self, position, value): #Change value at position, position is tuple (x, y)
         try:
@@ -125,10 +129,10 @@ class SnakeGame:
     
     def run(self, steptime): #call step ever x seconds
         if(self.render):
-            game.display()
+            self.display()
             plt.pause(0.0001)
         if(self.simpleRender):
-            game.simpl_display()
+            self.simpl_display()
         time.sleep(1.5) #Get ready!
         
         fractionstep = steptime
@@ -141,24 +145,30 @@ class SnakeGame:
                 self.move_snake()
                 self.step()
                 if(self.render):
-                    game.display()
+                    self.display()
                     plt.pause(0.0001)
                 if(self.simpleRender):
-                    game.simpl_display()
+                    self.simpl_display()
         if (self.record):
-            file = open("../resources/"+self.filename, "w")
-            stri = ""
-            for dataline in self.data:
-                stri += dataline + "\n"
-            file.write(stri)
-            file.close()
+            self.save_record()
         return
+
+    def save_record(self):
+        self.filename = "data_" + datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".txt"
+        print("Will save data to resources/" + self.filename)
+
+        file = open("../resources/" + self.filename, "w")
+        stri = ""
+        for dataline in self.data:
+            stri += dataline + "\n"
+        file.write(stri)
+        file.close()
         
     def step(self): #move snake forward, check tail flag, add tiny score
         head_position = (self.snake[0][0] + self.snake_direction[0], self.snake[0][1] + self.snake_direction[1])
         self.snake = [head_position] + self.snake
         self.check_ate_fruit()
-        print(self.get_observations())
+        # print(self.get_observations())
         if self.tail_flag:
             self.tail_flag = False
         else:
@@ -168,8 +178,7 @@ class SnakeGame:
         if (self.check_collision()):
             self.game_over = True
         else:
-            if self.record:
-                self.add_data()
+            self.add_data()
         self.score += 1
         return
     
@@ -199,8 +208,7 @@ class SnakeGame:
         if position[1] >= self.height:
             return True
         return False
-        
-    
+
     def check_ate_fruit(self): #check head on fruit, use tail_flag, add score
         if(self.fruit in self.snake):
             self.tail_flag = True
@@ -214,9 +222,6 @@ class SnakeGame:
         self.fruit = pos
         self.set(pos, 2)
         return
-
-    def press(self, event):
-        print('pres',event.key)
 
     def simpl_display(self):
         for i in range(self.width):
@@ -259,16 +264,24 @@ class SnakeGame:
     def train(self):
         return
 
-
-
 class TrainSnake():
-    def __init__(self):
+    def __init__(self, width, height, initial_games = 10, render=False):
+        self.width = width
+        self.height = height
+        self.initial_games = initial_games
+        self.render = render
+        self.max_score = 100
         return
 
     def play_game(self):
-        game = SnakeGame(20,20,KeyboardAgent())
-        game.init_snake()
-        game.run(0.1)
+        for _ in range(self.initial_games):
+            game = SnakeGame(self.width, self.height, TrainingAgent(),render=self.render)
+            game.init_snake()
+            game.run(0.000000001)
+            if(game.score>self.max_score):
+                game.save_record()
+                self.max_score = game.score
+            print(game.score)
 
 def get_all_data():
     files = glob.glob("../resources/*.txt")
@@ -284,6 +297,10 @@ def get_all_data():
 
 
 #game = SnakeGame(15,15,KeyboardAgent(), simpleRender=True)
-game = SnakeGame(15,15,KeyboardAgent(), render=True, record=True)
-game.init_snake()
-game.run(0.2)
+# game = SnakeGame(15,15,KeyboardAgent(), render=True, record=True)
+# game.init_snake()
+# game.run(0.2)
+
+train = TrainSnake(15,15,render=False)
+train.play_game()
+
