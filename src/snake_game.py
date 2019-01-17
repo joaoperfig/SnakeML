@@ -4,7 +4,7 @@ import time
 import msvcrt
 import datetime
 import glob
-
+import tflearn
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -142,6 +142,7 @@ class SnakeGame:
             if ( time.process_time() >= last + fractionstep):
                 last = time.process_time()
                 #time.sleep(steptime)
+                self.old_direction = self.snake_direction
                 self.move_snake()
                 self.step()
                 if(self.render):
@@ -337,10 +338,17 @@ def get_all_data():
             move = eval(parts[1])
             data += [[observ, move]]
     print(data)
+    
+def make_network():
+    network = input_data(shape=[None, 5, 1], name='input')
+    network = fully_connected(network, 25, activation='relu')
+    network = fully_connected(network, 1, activation='linear')
+    network = regression(network, optimizer='adam', learning_rate=1e-2, loss='mean_square', name='target')
+    model = tflearn.DNN(network)    
 
 
-game = SnakeGame(15,15,KeyboardAgent(), simpleRender=True)
-#game = SnakeGame(15,15,KeyboardAgent(), render=True, record=True)
+#game = SnakeGame(15,15,KeyboardAgent(), simpleRender=True)
+game = SnakeGame(15,15,KeyboardAgent(), render=True, record=True)
 game.init_snake()
 game.run(0.2)
 
