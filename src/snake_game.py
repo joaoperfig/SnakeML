@@ -178,7 +178,7 @@ class SnakeGame:
         print("")
      
     def distance_fruit(self):
-        return
+        return (self.snake[0][0] - self.fruit[0],self.snake[0][1] - self.fruit[1])
         
     # [left, front, right, angle to apple]
     def get_observations(self): 
@@ -199,6 +199,20 @@ class SnakeGame:
                 obs += [1,]
             else:
                 obs += [0,]
+    
+        if self.distance_fruit()[0] > 0: 
+            obs += [1,]
+        elif self.distance_fruit()[0] == 0:
+            obs += [0,]
+        else:
+            obs += [-1,]        
+        
+        if self.distance_fruit()[1] > 0: 
+            obs += [1,]
+        elif self.distance_fruit()[1] == 0:
+            obs += [0,]
+        else:
+            obs += [-1,]
         return obs
     
     def model(self):
