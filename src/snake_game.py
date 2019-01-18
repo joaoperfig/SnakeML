@@ -19,8 +19,8 @@ class TFRouletteAgent:
         self.cr = curve_random
 
     def getDirection(self):
-        observations = self.snakeGame.get_observations()[:6] #DELETE ME
-        predict = self.model.predict((np.array(observations)).reshape(-1, 6, 1))# 9, 1))
+        observations = self.snakeGame.get_observations()
+        predict = self.model.predict((np.array(observations)).reshape(-1, 9, 1))
         predict = predict[0]
         cr = self.cr
         if abs(predict[0]) < random.random()*self.maxrand and abs(predict[1]) < random.random()*self.maxrand:
@@ -472,20 +472,19 @@ def get_all_data():
         f = open(filename,"r")
         for line in f.readlines():
             parts = line.split("->")
-            #observ = eval(parts[0])
-            observ = eval(parts[0])[:6] #Delete me
+            observ = eval(parts[0])
             move = eval(parts[1])
             data += [[observ, move]]
     return data
     
-def make_network_and_train(train_data, save_filename=False, rate =0.01):
-    network = tflearn.layers.core.input_data(shape=[None, 6, 1], name='input')#9, 1], name='input')
-    network = tflearn.layers.core.fully_connected(network, 20, activation='relu')
-    network = tflearn.layers.core.fully_connected(network, 20, activation='relu')
+def make_network_and_train(train_data, save_filename=False, rate =0.01, nets=2, size=10):
+    network = tflearn.layers.core.input_data(shape=[None, 9, 1], name='input')
+    for i in range(nets):
+        network = tflearn.layers.core.fully_connected(network, size, activation='relu')
     network = tflearn.layers.core.fully_connected(network, 2, activation='linear')
     network = tflearn.layers.estimator.regression(network, optimizer='adam', learning_rate=rate, loss='mean_square', name='target')
     model = tflearn.DNN(network)    
-    X = np.array([i[0] for i in train_data]).reshape(-1, 6, 1)#9, 1)
+    X = np.array([i[0] for i in train_data]).reshape(-1, 9, 1)
     y = np.array([i[1] for i in train_data]).reshape(-1, 2)
     if (save_filename):
         model.fit(X,y, n_epoch = 1, shuffle = True, run_id = save_filename)
@@ -496,16 +495,18 @@ def make_network_and_train(train_data, save_filename=False, rate =0.01):
 
 def auto_game():
     data = get_all_data()
-    model = make_network_and_train(data, rate=0.01)
-    agent = TFRouletteAgent(model, maxrand=0.5, curve_random=0.6)
+    model = make_network_and_train(data, rate=0.01,nets=2,size=15)
+    #agent = TFRouletteAgent(model, maxrand=1, curve_random=0.2)
+    agent = TFAgent(model,threshold=0.5)
     game = SnakeGame(15,15,agent, render=True, record=False)
     game.init_snake()
-    game.run(0.01,0)
+    game.run(0.04,0)
 
-def fast_auto_game(lr, mult, turn):
+def fast_auto_game(lr, mult, turn, hidden_nets, nodes_per_hidden):
     data = get_all_data()
-    model = make_network_and_train(data, rate=lr)
-    agent = TFRouletteAgent(model, maxrand=mult,curve_random=turn)
+    model = make_network_and_train(data, rate=lr, nets=hidden_nets, size=nodes_per_hidden)
+    #agent = TFRouletteAgent(model, maxrand=mult,curve_random=turn)
+    agent = TFAgent(model,threshold=0.5)
     game = SnakeGame(15,15,agent, render=False, record=False)
     game.init_snake()
     return game.run(0,0,minpoints_at_steps=[600,600],wait_end=0)
@@ -517,26 +518,30 @@ def normal_game():
     
 def make_graph():
     import tensorflow as tf
-    tries = 2
-    lr = [0.0001, 0.001, 0.01, 0.1]
-    mult = [0.01, 0.1, 0.6, 0.8, 1]
-    turn = 0.5
+    tries = 10
+    hidden_layers =[2]
+    total_hidden_nodes = [30]
+    lr = [0.01]
+    mult = [1]
+    turn = 0.3
     final = ""
     for this_lr in lr:
         for this_mult in mult:
-            soma = 0
-            for t in range(tries):
-                soma += fast_auto_game(this_lr, this_mult, turn)
-                tf.reset_default_graph()
-            avg = soma/tries
-            final += "LR:"+str(this_lr)+" MLT:"+str(this_mult)+" AVG:"+str(avg)+"\n"
+            for this_hidden in hidden_layers:
+                for this_nodes in total_hidden_nodes:
+                    soma = 0
+                    for t in range(tries):
+                        soma += fast_auto_game(this_lr, this_mult, turn, this_hidden, math.floor(this_nodes/this_hidden))
+                        tf.reset_default_graph()
+                    avg = soma/tries
+                    final += "LR:"+str(this_lr)+" MLT:"+str(this_mult)+" Hidden_Layers:"+str(this_hidden)+" Total_Hid_Nodes:"+str(this_nodes)+" AVG:"+str(avg)+"\n"
     print (final)
 
 def programmed_game():
     agent = ProgrammedAgent()
     game = SnakeGame(15,15,agent, render=True, record=False)
     game.init_snake()
-    game.run(0.05,0)
+    game.run(0.04,0)
 
 def make_data():
     for i in range(1000):
